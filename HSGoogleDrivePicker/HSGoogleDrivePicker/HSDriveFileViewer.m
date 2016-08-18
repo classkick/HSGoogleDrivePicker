@@ -43,15 +43,15 @@ static NSString *const kKeychainItemName = @"Drive API";
     if (self)
     {
         [self setTitle:@"Google Drive"];
-
+        
         self.manager=manager;
         self.modalPresentationStyle=UIModalPresentationPageSheet;
-
+        
         UIGraphicsBeginImageContext(CGSizeMake(40, 40));
         CGContextAddRect(UIGraphicsGetCurrentContext(), CGRectMake(0, 0, 40, 40)); // this may not be necessary
         self.blankImage = UIGraphicsGetImageFromCurrentImageContext();
         UIGraphicsEndImageContext();
-
+        
         self.folderTrail=[NSMutableArray arrayWithObject:@"root"];
     }
     return self;
@@ -66,13 +66,13 @@ static NSString *const kKeychainItemName = @"Drive API";
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-
+    
     self.navigationController.navigationBar.translucent = NO;
     [self.navigationController.navigationBar setTintColor:[UIColor colorWithRed:0.541 green:0.855 blue:0.302 alpha:1.0]];
     [self.navigationController.navigationBar setTitleTextAttributes:@{NSFontAttributeName: [UIFont fontWithName:@"HelveticaNeue" size:16.0], NSKernAttributeName: @2.0}];
-
+    
     [self.view setBackgroundColor:[UIColor whiteColor]];
-
+    
     // Create a UITextView to display output.
     UILabel *output=[[UILabel alloc] initWithFrame:CGRectMake(40, 100, self.view.bounds.size.width-80, 40)];
     output.numberOfLines=0;
@@ -80,46 +80,46 @@ static NSString *const kKeychainItemName = @"Drive API";
     output.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleWidth;
     [self.view addSubview:output];
     self.output=output;
-
+    
     UIToolbar *toolbar=[UIToolbar new];
     [toolbar setTranslatesAutoresizingMaskIntoConstraints:NO];
     [toolbar setTintColor:[UIColor colorWithRed:0.541 green:0.855 blue:0.302 alpha:1.0]];
     self.toolbar=toolbar;
     [self.view addSubview:toolbar];
-
+    
     UITableView *tableView=[[UITableView alloc] initWithFrame:self.view.bounds style:UITableViewStylePlain];
     [tableView setTranslatesAutoresizingMaskIntoConstraints:NO];
     [tableView setDelegate:self];
     [tableView setDataSource:self];
-
+    
     [tableView addPullToRefreshWithActionHandler:^{
         [self getFiles];
     }];
-
+    
     [self.view addSubview:tableView];
     self.table=tableView;
-
+    
     NSDictionary *views = NSDictionaryOfVariableBindings(toolbar,tableView);
-
+    
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"|[toolbar]|"
                                                                       options:NSLayoutFormatDirectionLeftToRight
                                                                       metrics:nil
                                                                         views:views]];
-
+    
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"|[tableView]|"
                                                                       options:NSLayoutFormatDirectionLeftToRight
                                                                       metrics:nil
                                                                         views:views]];
-
+    
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[toolbar(44)][tableView]|"
                                                                       options:NSLayoutFormatDirectionLeftToRight
                                                                       metrics:nil
                                                                         views:views]];
-
-
+    
+    
     [self setupButtons];
     [self updateButtons];
-
+    
 }
 
 - (NSArray *)onlyPdfsAndFoldersInItems:(NSArray *)items
@@ -138,13 +138,13 @@ static NSString *const kKeychainItemName = @"Drive API";
 - (void)viewDidAppear:(BOOL)animated
 {
     UIViewController *authVC=[self.manager authorisationViewController];
-
+    
     if (authVC)
     {
         // Not yet authorized, request authorization by pushing the login UI onto the UI stack.
         UINavigationController *nc=(UINavigationController *)[self parentViewController];
         [nc pushViewController:authVC animated:YES];
-
+        
     }
     else
     {
@@ -169,18 +169,18 @@ static NSString *const kKeychainItemName = @"Drive API";
     {
         [self.table triggerPullToRefresh];
     }
-
+    
     self.manager.sharedWithMe=self.showShared;
     self.fileList=NULL;
-
+    
     [self updateDisplay];
     [self updateButtons];
-
+    
     [self.manager fetchFilesWithCompletionHandler:^(GTLServiceTicket *ticket, GTLDriveFileList *fileList, NSError *error)
      {
          [self.table.pullToRefreshView stopAnimating];
-
-
+         
+         
          if (error)
          {
              NSString *message=[NSString stringWithFormat:@"Error: %@",error.localizedDescription ];
@@ -190,19 +190,19 @@ static NSString *const kKeychainItemName = @"Drive API";
          {
              self.fileList=fileList;
          }
-
+         
          [self updateDisplay];
-
+         
      }];
 }
 
 -(void)updateDisplay
 {
     [self updateButtons];
-
+    
     if (self.fileList)
     {
-        if ([self onlyPdfsAndFoldersInItems:self.fileList.items].count)
+        if ([self onlyPdfsAndFoldersInItems:self.fileList.files].count)
         {
             [self.table setHidden:NO];
             [self.table reloadData];
@@ -219,14 +219,14 @@ static NSString *const kKeychainItemName = @"Drive API";
 {
     NSArray *segItemsArray = [NSArray arrayWithObjects: @"Mine",@"Shared", nil];
     UISegmentedControl *segmentedControl = [[UISegmentedControl alloc] initWithItems:segItemsArray];
-
-
+    
+    
     UIBarButtonItem *closeButton=[[UIBarButtonItem alloc] initWithTitle:@"Close" style:UIBarButtonItemStylePlain target:self action:@selector(cancel:)];
     [closeButton setTitleTextAttributes:@{NSFontAttributeName: [UIFont fontWithName:@"HelveticaNeue-Medium" size:18.0], NSKernAttributeName: @2.0} forState:UIControlStateNormal];
-
+    
     self.upItem=[[UIBarButtonItem alloc] initWithTitle:@"Back" style:UIBarButtonItemStylePlain target:self action:@selector(up:)];
     [self.upItem setTitleTextAttributes:@{NSFontAttributeName: [UIFont fontWithName:@"HelveticaNeue-Medium" size:16.0], NSKernAttributeName: @2.0} forState:UIControlStateNormal];
-
+    
     // This should eventually sign you out of Google.
     [self.navigationItem setLeftBarButtonItem:closeButton
                                      animated:YES];
@@ -240,7 +240,7 @@ static NSString *const kKeychainItemName = @"Drive API";
     UIBarButtonItem *flex=[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace
                                                                         target:nil
                                                                         action:nil];
-
+    
     if ([self.folderTrail count]>1 && !self.showShared)
     {
         [self.toolbar setItems:@[self.upItem,flex] animated:YES];
@@ -256,7 +256,7 @@ static NSString *const kKeychainItemName = @"Drive API";
 -(void)mineSharedChanged:(UISegmentedControl*)sender
 {
     self.showShared=([sender selectedSegmentIndex]==1);
-
+    
     [self getFiles];
 }
 
@@ -274,12 +274,12 @@ static NSString *const kKeychainItemName = @"Drive API";
 {
     NSString *folderId=[file identifier];
     NSString *currentFolder=[self.folderTrail lastObject];
-
+    
     if ([folderId isEqualToString:currentFolder])
     {
         return;
     }
-
+    
     else
     {
         [self.folderTrail addObject:folderId];
@@ -294,7 +294,7 @@ static NSString *const kKeychainItemName = @"Drive API";
 
 -(GTLDriveFile*)fileForIndexPath:(nonnull NSIndexPath *)indexPath
 {
-    NSArray *filteredFiles = [self onlyPdfsAndFoldersInItems:self.fileList.items];
+    NSArray *filteredFiles = [self onlyPdfsAndFoldersInItems:self.fileList.files];
     if (filteredFiles.count) {
         return [filteredFiles objectAtIndex:[indexPath row]];
     }
@@ -304,7 +304,7 @@ static NSString *const kKeychainItemName = @"Drive API";
 
 -(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    return [[self onlyPdfsAndFoldersInItems:self.fileList.items] count];
+    return [[self onlyPdfsAndFoldersInItems:self.fileList.files] count];
 }
 
 -(UITableViewCell*)tableView:(UITableView *)tableView cellForRowAtIndexPath:(nonnull NSIndexPath *)indexPath
@@ -314,22 +314,22 @@ static NSString *const kKeychainItemName = @"Drive API";
     if (!cell)
     {
         cell=[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier];
-
+        
         UIImageView *iv=cell.imageView;
         [iv setImage:self.blankImage];
-
+        
         AsyncImageView *async=[[AsyncImageView alloc] initWithFrame:CGRectMake(0, 0, 40, 40)];
         [async setContentMode:UIViewContentModeCenter];
-
+        
         [iv addSubview:async];
     }
-
+    
     AsyncImageView *async=(AsyncImageView *)[cell.imageView.subviews firstObject];
     GTLDriveFile *file=[self fileForIndexPath:indexPath];
-
+    
     if (file)
     {
-        [cell.textLabel setText:file.title];
+        [cell.textLabel setText:file.name];
         [cell.textLabel setFont:[UIFont fontWithName:@"HelveticaNeue" size:16]];
         [async setImageURL:[NSURL URLWithString:file.iconLink]];
     }
@@ -338,14 +338,14 @@ static NSString *const kKeychainItemName = @"Drive API";
         [cell.textLabel setText:NULL];
         [async setImage:NULL];
     }
-
+    
     return cell;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
     GTLDriveFile *file=[self fileForIndexPath:indexPath];
-    NSLog(@"FILE: %@", file.title);
+    NSLog(@"FILE: %@", file.name);
     if ([file isFolder])
     {
         [self openFolder:file];
