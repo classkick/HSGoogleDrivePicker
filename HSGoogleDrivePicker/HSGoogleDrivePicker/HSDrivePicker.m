@@ -54,8 +54,7 @@
 
     if (file.downloadUrl != nil)
     {
-        GTMHTTPFetcher *fetcher =
-        [service.fetcherService fetcherWithURLString:file.downloadUrl];
+        GTMSessionFetcher *fetcher = [service.fetcherService fetcherWithURLString:file.downloadUrl];
 
         [fetcher beginFetchWithCompletionHandler:^(NSData *data, NSError *error) {
             if (error == nil) {

@@ -7,7 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "GTLDrive.h"
+#import <GoogleAPIClient/GTLDrive.h>
 #import "HSDriveManager.h"
 
 @class HSDriveFileViewer;

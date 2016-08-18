@@ -7,9 +7,9 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "GTLDrive.h"
+#import <GoogleAPIClient/GTLDrive.h>
 #import "GTLDriveFile+HS.h"
-#import "GTMHTTPFetcher.h"
+#import <GTMSessionFetcher/GTMSessionFetcher.h>
 
 @interface HSDriveManager : NSObject
 
@@ -25,7 +25,7 @@
 /** If the download completes succesfully, then the completion handler will be called with NULL for the error
  returns GTMHTTPFetcher - this can be used to monitor download progress.
  **/
--(GTMHTTPFetcher*)downloadFile:(GTLDriveFile*)file toPath:(NSString*)path withCompletionHandler:(void (^)(NSError *error))handler;
+-(GTMSessionFetcher*)downloadFile:(GTLDriveFile*)file toPath:(NSString*)path withCompletionHandler:(void (^)(NSError *error))handler;
 
 /** if No, shows 'my files'. Default is NO **/
 @property (assign) BOOL sharedWithMe;
