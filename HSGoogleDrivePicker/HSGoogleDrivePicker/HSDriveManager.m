@@ -7,7 +7,7 @@
 //
 
 #import "HSDriveManager.h"
-#import "GTMOAuth2ViewControllerTouch.h"
+#import <GTMOAuth2/GTMOAuth2ViewControllerTouch.h>
 
 
 static NSString *const kKeychainItemName = @"Drive API";
@@ -56,11 +56,12 @@ static NSString *const kKeychainItemName = @"Drive API";
 
 #pragma mark download
 
--(GTMHTTPFetcher*)downloadFile:(GTLDriveFile*)file toPath:(NSString*)path withCompletionHandler:(void (^)(NSError *error))handler
+-(GTMSessionFetcher*)downloadFile:(GTLDriveFile*)file toPath:(NSString*)path withCompletionHandler:(void (^)(NSError *error))handler
 {
-    GTMHTTPFetcher *fetcher = [self.service.fetcherService fetcherWithURLString:file.webContentLink];
-    [fetcher setDownloadPath:path];
-
+    GTMSessionFetcher *fetcher = [self.service.fetcherService fetcherWithURLString:file.downloadUrl];
+    NSURL* destinationUrl=[NSURL fileURLWithPath:path];
+    [fetcher setDestinationFileURL:destinationUrl];
+    
     [fetcher beginFetchWithCompletionHandler:^(NSData *data, NSError *error) {
         if (error == nil) {
             // Success.
@@ -93,7 +94,7 @@ static NSString *const kKeychainItemName = @"Drive API";
     return query;
 }
 
-// Construct a query to get names and IDs of 10 files using the Google Drive API.
+// Construct a query to get names and IDs of files using the Google Drive API.
 - (void)fetchFilesWithCompletionHandler:(void (^)(GTLServiceTicket *ticket, GTLDriveFileList *fileList, NSError *error))handler
 {
 
@@ -102,42 +103,15 @@ static NSString *const kKeychainItemName = @"Drive API";
     GTLQueryDrive *query = [GTLQueryDrive queryForFilesList];
 
     query.q=[self query];
-
+    query.fields=@"files(id,kind,mimeType,name,size,iconLink)";
+    
+    
     query.pageSize = self.maxResults;
-
+    
     [self.service executeQuery:query
              completionHandler:handler];
 
 }
-
-// Process the response and display output.
-- (void)displayResultWithTicket:(GTLServiceTicket *)ticket
-             finishedWithObject:(GTLDriveFileList *)files
-                          error:(NSError *)error
-{
-    if (error == nil)
-    {
-        NSMutableString *filesString = [[NSMutableString alloc] init];
-        if (files.files.count > 0)
-        {
-            [filesString appendString:@"Files:\n"];
-            for (GTLDriveFile *file in files)
-            {
-                [filesString appendFormat:@"%@ (%@)\n", file.name, file.identifier];
-            }
-        }
-        else
-        {
-            [filesString appendString:@"No files found."];
-        }
-        NSLog(@"Output: %@",filesString);
-    }
-    else
-    {
-        NSLog(@"Error: %@",error.localizedDescription);
-    }
-}
-
 
 #pragma mark auth controller
 
